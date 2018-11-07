@@ -5,39 +5,188 @@ using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 
 public class Player : MonoBehaviour {
-    public float runSpeed = 4f;
 
+    //Config
+    [SerializeField]
+    float runSpeed = 4f;
+    [SerializeField]
+    float jumpSpeed = 10f;
+    [SerializeField]
+    float climbSpeed = 1f;
+    // State
+    bool isAlive = true;
+
+
+    //private cache values
+
+    private float gravityScaleAtStart;
+    // Cached component references
     private Rigidbody2D myRigidBody;
-	// Use this for initialization
-	void Start () {
+    private Animator myAnimator;
+    private Collider2D myCollider;
+
+
+
+    // Use this for initialization
+    void Start() {
         myRigidBody = GetComponent<Rigidbody2D>();
-	}
-	
-	// Update is called once per frame
-	void Update () {
+        myAnimator = GetComponent<Animator>();
+        myCollider = GetComponent<Collider2D>();
+        gravityScaleAtStart = myRigidBody.gravityScale;
+    }
+
+    // Update is called once per frame
+    void Update() {
         Run();
-        
-	}
+        FlipSprite();
+        Jump();
+        ClimbLadder();
+        Debug.Log(myRigidBody.velocity);
+    }
 
     private void Run() {
 
         float horizontalMove = CrossPlatformInputManager.GetAxis("Horizontal");//* runSpeed) * Time.deltaTime;
 
-        Vector2 playerVelocity = new Vector2(horizontalMove *runSpeed, myRigidBody.velocity.y);
+        Vector2 playerVelocity = new Vector2(horizontalMove * runSpeed, myRigidBody.velocity.y);
         myRigidBody.velocity = playerVelocity;
         //transform.position = new Vector2(transform.position.x + horizontalMove, transform.position.y);
-        FlipSprite();
+
+
+        bool playerHasHorizontalSpeed = Mathf.Abs(myRigidBody.velocity.x) > Mathf.Epsilon;//If the player is moving horizontally
+        myAnimator.SetBool("Running", playerHasHorizontalSpeed);
+
+    }
+
+    private void Jump() {
+        if (!myCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) {
+            return;
+        }
+
+        if (CrossPlatformInputManager.GetButtonDown("Jump")) {
+            Vector2 jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
+            myRigidBody.velocity += jumpVelocityToAdd;
+        }
     }
 
     private void FlipSprite() {
-        bool playerHasHorizontalSpeed = Mathf.Abs(myRigidBody.velocity.x) >Mathf.Epsilon;//If the player is moving horizontally
-        if(playerHasHorizontalSpeed)
-        {
+        bool playerHasHorizontalSpeed = Mathf.Abs(myRigidBody.velocity.x) > Mathf.Epsilon;//If the player is moving horizontally
+        if (playerHasHorizontalSpeed) {
             //reverse current x-axis scaling
-            transform.localScale = new Vector3(Mathf.Sign(myRigidBody.velocity.x),1,1);
-            
+            transform.localScale = new Vector2(Mathf.Sign(myRigidBody.velocity.x), 1f);
+
         }
 
     }
+
+    private void ClimbLadder() {
+        if (!myCollider.IsTouchingLayers(LayerMask.GetMask("Ladder"))) {
+            myAnimator.SetBool("Climbing", false);
+            myRigidBody.gravityScale = gravityScaleAtStart;
+            return;
+        }
+
+        
+        float verticalMove = CrossPlatformInputManager.GetAxis("Vertical");
+        bool verticalDirection = Mathf.Abs(verticalMove) > Mathf.Epsilon;
+        Debug.Log("vertical Dir:2" + verticalDirection);
+        if (verticalDirection) {
+            myRigidBody.gravityScale = 0f;
+            myAnimator.SetBool("Climbing", true);
+            myRigidBody.velocity = new Vector2(myRigidBody.velocity.x/climbSpeed, verticalMove * climbSpeed);
+
+        }else {
+            myAnimator.SetBool("Climbing", false);
+            myRigidBody.gravityScale = 0f;
+                myRigidBody.velocity = new Vector2(myRigidBody.velocity.x, 0);
+                
+        }
+
+        
+
+
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision) {
+
+        //myAnimator.SetBool("Climbing", true);
+    }
+
+    private void OnTriggerExit2D(Collider2D collision) {
+        //myAnimator.SetBool("Climbing", false);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+     
+     
+     using UnityEngine;
+ 
+public class PlayerController : MonoBehaviour {
+    public float speed = 3f;
+    public float jumpForce = 12f;
+    public float firstJumpForce = 8f;
+    public int jumps = 2;
+ 
+    private int remainingJumps;
+    private float x;
+    private Animator animator;
+    private Rigidbody2D rigidbody;
+    private CapsuleCollider2D bodyCollider;
+    private BoxCollider2D feetCollider;
+ 
+    // Use this for initialization
+    void Awake () {
+        animator = GetComponent<Animator>();
+        rigidbody = GetComponent<Rigidbody2D>();
+        feetCollider = GetComponent<BoxCollider2D>();
+        bodyCollider = GetComponent<CapsuleCollider2D>();
+    }
     
+    // Update is called once per frame
+    void Update () {
+        Run(Input.GetAxis("Horizontal"));
+    }
+    void FixedUpdate() {
+        if (feetCollider.IsTouchingLayers(LayerMask.GetMask("World"))) {
+            remainingJumps = jumps;
+        }
+ 
+        if(Input.GetButtonDown("Jump")) {
+            Jump();
+        }
+    }
+    private void Jump() {
+        if((feetCollider.IsTouchingLayers(LayerMask.GetMask("World")) || remainingJumps > 0)) {
+            if(remainingJumps == jumps) {
+                rigidbody.AddForce(Vector2.up * firstJumpForce, ForceMode2D.Impulse);
+            } else {
+                rigidbody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            }
+            remainingJumps--;
+        }
+    }
+    private void Run(float x) {
+        if (x == 0) {
+            animator.SetBool("isRunning", false);
+            return;
+        }
+        animator.SetBool("isRunning", true);
+        transform.Translate(Vector2.right * x * speed * Time.deltaTime);
+        transform.localScale = new Vector2(Mathf.Sign(x),1);
+    }
+}
+     
+     */
+
 }
