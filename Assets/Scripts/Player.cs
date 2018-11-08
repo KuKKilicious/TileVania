@@ -13,35 +13,56 @@ public class Player : MonoBehaviour {
     float jumpSpeed = 10f;
     [SerializeField]
     float climbSpeed = 1f;
+    [SerializeField]
+    Vector2 dieKnockback =new Vector2 (10,10);
     // State
     bool isAlive = true;
 
 
     //private cache values
-
+    //jumped in midair bool
+    //walljumped bool
     private float gravityScaleAtStart;
     // Cached component references
     private Rigidbody2D myRigidBody;
     private Animator myAnimator;
     private Collider2D myCollider;
-
+    private Collider2D myFeet;
 
 
     // Use this for initialization
     void Start() {
         myRigidBody = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
-        myCollider = GetComponent<Collider2D>();
+        myCollider = GetComponent<CapsuleCollider2D>();
+        myFeet = GetComponent<BoxCollider2D>();
         gravityScaleAtStart = myRigidBody.gravityScale;
     }
 
     // Update is called once per frame
     void Update() {
+        if (isAlive) {
         Run();
         FlipSprite();
         Jump();
         ClimbLadder();
-        Debug.Log(myRigidBody.velocity);
+        }
+        
+        Death();
+    }
+
+    private void Death() {
+        if (!myCollider.IsTouchingLayers(LayerMask.GetMask("Enemy"))||!myFeet.IsTouchingLayers(LayerMask.GetMask("Enemy"))) {
+
+            return;
+        }
+
+        if (isAlive) {
+            isAlive = false;
+            myAnimator.SetTrigger("Death");
+            myRigidBody.velocity = new Vector2(dieKnockback.x*Mathf.Sign(myRigidBody.velocity.x),dieKnockback.y);
+        }
+        
     }
 
     private void Run() {
@@ -59,7 +80,7 @@ public class Player : MonoBehaviour {
     }
 
     private void Jump() {
-        if (!myCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) {
+        if (!myFeet.IsTouchingLayers(LayerMask.GetMask("Ground"))) {
             return;
         }
 
@@ -80,7 +101,7 @@ public class Player : MonoBehaviour {
     }
 
     private void ClimbLadder() {
-        if (!myCollider.IsTouchingLayers(LayerMask.GetMask("Ladder"))) {
+        if (!myFeet.IsTouchingLayers(LayerMask.GetMask("Ladder"))) {
             myAnimator.SetBool("Climbing", false);
             myRigidBody.gravityScale = gravityScaleAtStart;
             return;
@@ -117,7 +138,7 @@ public class Player : MonoBehaviour {
     }
 
 
-
+ 
 
 
 
