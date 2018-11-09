@@ -137,6 +137,7 @@ MonoBehaviour:
   runSpeed: 5
   jumpSpeed: 13.7
   climbSpeed: 5
+  dieKnockback: {x: 10, y: 10}
 --- !u!212 &212794194683104408
 SpriteRenderer:
   m_ObjectHideFlags: 1

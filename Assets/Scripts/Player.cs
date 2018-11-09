@@ -14,7 +14,7 @@ public class Player : MonoBehaviour {
     [SerializeField]
     float climbSpeed = 1f;
     [SerializeField]
-    Vector2 dieKnockback =new Vector2 (10,10);
+    Vector2 dieKnockback = new Vector2(10, 10);
     // State
     bool isAlive = true;
 
@@ -42,27 +42,34 @@ public class Player : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         if (isAlive) {
-        Run();
-        FlipSprite();
-        Jump();
-        ClimbLadder();
+            Run();
+            FlipSprite();
+            Jump();
+            ClimbLadder();
+            Death();
         }
-        
-        Death();
+
+
     }
 
     private void Death() {
-        if (!myCollider.IsTouchingLayers(LayerMask.GetMask("Enemy"))||!myFeet.IsTouchingLayers(LayerMask.GetMask("Enemy"))) {
+        if (myCollider.IsTouchingLayers(LayerMask.GetMask("Enemy"))
+            || myFeet.IsTouchingLayers(LayerMask.GetMask("Enemy"))
+            || myCollider.IsTouchingLayers(LayerMask.GetMask("Hazards"))
+            || myFeet.IsTouchingLayers(LayerMask.GetMask("Hazards"))
+            ) {
 
-            return;
-        }
-
-        if (isAlive) {
             isAlive = false;
             myAnimator.SetTrigger("Death");
-            myRigidBody.velocity = new Vector2(dieKnockback.x*Mathf.Sign(myRigidBody.velocity.x),dieKnockback.y);
+            myRigidBody.velocity = new Vector2(dieKnockback.x * Mathf.Sign(myRigidBody.velocity.x), dieKnockback.y);
+
         }
-        
+
+
+
+
+
+
     }
 
     private void Run() {
@@ -107,23 +114,23 @@ public class Player : MonoBehaviour {
             return;
         }
 
-        
+
         float verticalMove = CrossPlatformInputManager.GetAxis("Vertical");
         bool verticalDirection = Mathf.Abs(verticalMove) > Mathf.Epsilon;
         Debug.Log("vertical Dir:2" + verticalDirection);
         if (verticalDirection) {
             myRigidBody.gravityScale = 0f;
             myAnimator.SetBool("Climbing", true);
-            myRigidBody.velocity = new Vector2(myRigidBody.velocity.x/climbSpeed, verticalMove * climbSpeed);
+            myRigidBody.velocity = new Vector2(myRigidBody.velocity.x / climbSpeed, verticalMove * climbSpeed);
 
-        }else {
+        } else {
             myAnimator.SetBool("Climbing", false);
             myRigidBody.gravityScale = 0f;
-                myRigidBody.velocity = new Vector2(myRigidBody.velocity.x, 0);
-                
+            myRigidBody.velocity = new Vector2(myRigidBody.velocity.x, 0);
+
         }
 
-        
+
 
 
     }
@@ -138,7 +145,7 @@ public class Player : MonoBehaviour {
     }
 
 
- 
+
 
 
 
