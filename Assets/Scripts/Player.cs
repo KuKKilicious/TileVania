@@ -62,7 +62,9 @@ public class Player : MonoBehaviour {
             isAlive = false;
             myAnimator.SetTrigger("Death");
             myRigidBody.velocity = new Vector2(dieKnockback.x * Mathf.Sign(myRigidBody.velocity.x), dieKnockback.y);
+            var gameSession =FindObjectOfType<GameSession>();
 
+            gameSession.ProcessPlayerDeath();
         }
 
 
