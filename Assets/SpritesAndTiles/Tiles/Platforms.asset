@@ -20,7 +20,7 @@ MonoBehaviour:
     - {fileID: 21300022, guid: abda9ecf6d3160040b532aaa18037158, type: 3}
     m_GameObject: {fileID: 0}
     m_AnimationSpeed: 1
-    m_PerlinScale: 0.5
+    m_PerlinScale: 0.001
     m_RuleTransform: 0
     m_Output: 0
     m_ColliderType: 1
