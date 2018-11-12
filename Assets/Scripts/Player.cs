@@ -62,9 +62,9 @@ public class Player : MonoBehaviour {
             isAlive = false;
             myAnimator.SetTrigger("Death");
             myRigidBody.velocity = new Vector2(dieKnockback.x * Mathf.Sign(myRigidBody.velocity.x), dieKnockback.y);
-            var gameSession =FindObjectOfType<GameSession>();
+            StartCoroutine(ProcessPlayerDeath());
 
-            gameSession.ProcessPlayerDeath();
+           
         }
 
 
@@ -90,10 +90,12 @@ public class Player : MonoBehaviour {
 
     private void Jump() {
         if (!myFeet.IsTouchingLayers(LayerMask.GetMask("Ground"))) {
+            myAnimator.SetBool("Jumping", false);
             return;
         }
 
         if (CrossPlatformInputManager.GetButtonDown("Jump")) {
+            myAnimator.SetBool("Jumping", true);
             Vector2 jumpVelocityToAdd = new Vector2(0f, jumpSpeed);
             myRigidBody.velocity += jumpVelocityToAdd;
         }
@@ -147,7 +149,11 @@ public class Player : MonoBehaviour {
     }
 
 
-
+    private IEnumerator ProcessPlayerDeath() {
+        yield return new WaitForSeconds(2f);
+        var gameSession = FindObjectOfType<GameSession>();
+        gameSession.ProcessPlayerDeath();
+    }
 
 
 
